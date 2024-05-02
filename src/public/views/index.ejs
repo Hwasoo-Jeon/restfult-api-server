@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Restful API Main Page</title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <script>
+      function submit() {
+        let roleInput = document.querySelector('input[name="role"]').value;
+        let submitUrl = `<%=SUBMIT_URL %>/${roleInput}`;
+        console.log(roleInput);
+        console.log(submitUrl);
+        fetch(submitUrl)
+          .then((response) => response.json()) // 응답을 JSON으로 변환
+          .then((data) => {
+            console.log(data);
+            // // 응답 데이터를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   JSON.stringify(data);
+          })
+          .catch((err) => {
+            console.error(err);
+            // 에러 메시지를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   "Error: " + error;
+          });
+      }
+      //<%=SUBMIT_URL %>
+    </script>
+  </head>
+  <body>
+    <h1>Restful API Server Test</h1>
+    <p>hello <%=name %></p>
+    <div>
+      <h3>access token issue</h3>
+      역할 :
+      <input type="text" name="role" value="member" />
+      <input id="submitBtn" type="button" value="제출" onclick="submit()" />
+    </div>
+
+    <div>
+      <h3>응답 확인</h3>
+      <div id="responseResult"></div>
+    </div>
+  </body>
+</html>

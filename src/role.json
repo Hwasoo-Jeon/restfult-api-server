@@ -1,0 +1,12 @@
+{
+  "role": {
+    "super": "소유자",
+    "admin": "관리자",
+    "member": "일반사용자"
+  },
+  "authorization": {
+    "super": ["GET", "POST", "PUT", "DELETE"],
+    "admin": ["GET", "POST"],
+    "member": ["GET"]
+  }
+}
