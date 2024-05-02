@@ -1,0 +1,19 @@
+타입스크립트 관련
+https://velog.io/@jiheon/Node.js-Express-TypeScript-%EC%84%A4%EC%A0%95%ED%95%98%EA%B8%B0
+
+1. tsconfig는 참고안함
+2. 파워셸 설정 변경하여 tsc 명령어 사용 가능
+```
+$ npm install -g typescript
+$ tsc --init
+
+$ npm install --save-dev @types/node @types/express ts-node typescript
+
+등 필요한 파일을 @types로 설치
+```
+3.package.json 내에 scripts를 추가합니다.
+
+dev : 주로 개발 환경에서 사용하며, ts-node 실행 결과를 nodemon으로 넘겨주어 함께 사용이 가능합니다.
+copy-files : tsc로 빌드 시 .ts가 아닌 파일들은 제외되므로, 정적 파일들을 복사하여 추가하는 부분입니다.
+build : tsc 명령어를 통해 컴파일하고 copy-files와 함께 빌드를 진행합니다.
+start : 빌드된 dist/bin/www.js 파일을 실행합니다.

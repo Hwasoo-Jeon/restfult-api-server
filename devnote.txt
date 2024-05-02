@@ -1,0 +1,100 @@
+참고 자료 : https://codingschool.tistory.com/10
+
+windows 개발 환경 셋팅
+1. NPM으로 express package를 설치후에 수동으로 코드를 작성하는 방법이 있지만 저는 express-generator를 사용하여 기본  템플릿을 만들어서 시작
+2. node command shell을 관리자로 실행
+```
+// express-generator를 설치
+npm install -g express-generator
+
+// 원하는 디렉토리에 apiserver 디렉토리 생성하고 기본 코드들을 자동으로 생성
+express --no-view apiserver
+
+// apiserver 디렉토리로 이동후 기본 패키지들을 설치
+$ cd apiserver
+$ npm install
+```
+3. 서버 실행 명령어
+```
+node bin/www
+// 접속 port : http://localhost:3000
+```
+====================================
+라우팅
+1. entry 지점은 bin/www에 생성 www에서 서버 설정
+// 여기서 http server를 구동하고 app.js를 binding한다. 포트를 변경하거나 http대신 https로 교체 가능.
+====================================
+express 방식
+1. require 함수는 모듈을 불러오는 것
+
+====================================
+router js 파일에 get post 등 rest api 사용 법 ex
+```
+router.post("/post/register", (req, res, next) => {
+  let username = req.body.username;
+
+  if (username === null || username.length === 0) {
+    res.send(
+      JSON.stringify({
+        code: "400",
+        message: "not registered",
+      })
+    );
+    return;
+  }
+
+  res.send(
+    JSON.stringify({
+      code: 200,
+      yourname: username,
+    })
+  );
+});
+```
+====================================
+응답 Header 설정
+```
+//응답 헤더 및 CORS 설정
+router.get("/get/customheader", (req, res, next) => {
+  //응답 코드설정
+  res.writeHead(200, {
+    "content-type": "application/json", //응답 본문 JSON 형식
+    "Access-Control-Allow-Origin": "*", //모든 도메인으로 부터 요청 허용
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE", //http 메서드 허용 범위
+    "Access-Control-Max-Age": "3600", //헤더를 통해 이 정보를 얼마나 오랫동안 캐시할지, 일한 요청을 반복해서 보낼 때 매번 사전 요청을 보내지 않아도 되게 하여 통신 효율을 높임,사전 요청 결과가 캐시될 수 있는 최대 시간(초 단위)
+    "Access-Control-Allow-Headers": "x-requested-with", //클라이언트에서 AJAX로 보내면 이 헤더 보냄,서버가 허용하는 특정 요청 헤더
+  });
+
+  res.end('{"code":200, "result": "ok"}');
+});
+```
+
+================================
+Express 미들웨어 기능
+
+로깅 요청
+요청 데이터 파싱(예: JSON 또는 양식 데이터)
+사용자 인증
+보안 정책 시행(예: CORS)
+오류 처리
+
+express.json() : Request Body에서 들어오는 JSON 데이터를 구문 분석하고 req.body 개체에서 사용할 수 있도록 해주는  미들웨어 함수
+POST요청에서 req.body를 통해 파라메터를 참조할 수 있던 이유가 express.json() 
+
+express.urlencoded 이것 없으면 post 요청에서 form 태그 처럼 urlencoded로 넘어오는 데이터 req body로 사용 불가.
+
+Express.static : express generator 사용하면 자동 생성,지정된 디렉토리(public)의 정적자원 제공하는 web server 기능
+Apache : 트래픽이 많을 경우 이것 사용
+
+compression : 서버에서 클라이언트로 전송되는 HTTP  Reponse를 압축하는 데 사용할 수 있는 기본 제공 미들웨어
+              gzip 또는 deflate 등의 알고리즘을 사용하여 응답 데이터 압축.
+              직접 package.json에 추가(ex. "compression": "~1.7.4",)
+
+
+======================================
+view engine 추가
+
+npm i ejs (pug 도 있음 : html을 더욱 간략화하고, js 코드 사용 법이 다름)
+
+
+              
