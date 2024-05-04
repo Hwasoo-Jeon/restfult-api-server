@@ -9,7 +9,12 @@ router.get("/", (req: Request, res: Response, next: NextFunction) => {
   console.log(PUBLIC_URL);
   res.render("index.ejs", {
     name: "방문자",
-    SUBMIT_URL: `${PUBLIC_URL}/token/token`,
+    TOKEN_URL: `${PUBLIC_URL}/token`,
+    CHECK_URL: `check`,
+    ISSUE_URL: `issuing`,
+    VERIFY_URL: `verification`,
+    REFRESH_URL: `refreshing`,
+    REMOVE_URL: `removing`,
   });
 });
 
