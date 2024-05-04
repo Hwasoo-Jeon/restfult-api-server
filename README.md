@@ -1,4 +1,4 @@
-# NodeJS API 서버
+# NodeJS Restful API 서버
 <br/>
 
 ## 목적
@@ -8,7 +8,8 @@
 <br/>
 
 ## 환경
-- JWT + Restful API Server(NodeJS, Express Generator, Typescript)
+- BackEnd : NodeJS + Express Generator, JWT, Typescript
+- FrontEnd : ejs(간단한 요청용 view)
 <br/>
 
 ## 기능
