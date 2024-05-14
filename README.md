@@ -12,11 +12,13 @@
 - FrontEnd : ejs(간단한 요청용 view)
 - DB : Redis
 <br/>
+
 ## 흐름
 - 로그인 정보를 검증 : Passport.js
 - 사용자 인증 정보를 전송 수단 : JWT
 - 세션 정보를 저장 : Redis
 <br/>
+
 ## 기능
 - Accesstoken, RefreshToken 발급 및 저장(Cookie), 검증, 갱신, 삭제
 - 로그인 기능(Passport JS)
