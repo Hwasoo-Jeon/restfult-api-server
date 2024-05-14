@@ -31,7 +31,7 @@
 - 사용자별 권한 제한
 <br/>
 
-## 참고사항
+## 기타 사항
 - AccessToken의 보관 위치? Cookie or ModernStorage => https://velog.io/@0307kwon/JWT%EB%8A%94-%EC%96%B4%EB%94%94%EC%97%90-%EC%A0%80%EC%9E%A5%ED%95%B4%EC%95%BC%ED%95%A0%EA%B9%8C-localStorage-vs-cookie
 <br/>
 
@@ -40,3 +40,8 @@
 - TypeScript를 설정 및 활용
 - passport를 사용한 login
 - AccessToken과 RefreshToken 활용 구분
+- Restful하다?
+  - 리소스 기반의 URL 설계(/users)
+  - HTTP 메소드를 활용한 리소스 연산(CRUD)
+  - Stateless 통신(JWT)
+  - 표준화된 콘텐츠 타입을 사용(JSON, XML)
