@@ -6,6 +6,17 @@
     <title>Restful API Main Page</title>
     <link rel="stylesheet" href="/stylesheets/style.css" />
     <script>
+      const getCookie = (name) => {
+        let matches = document.cookie.match(
+          new RegExp(
+            "(?:^|; )" +
+              name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") +
+              "=([^;]*)"
+          )
+        );
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+      };
+
       function check() {
         let roleInput = document.querySelector('input[name="role"]').value;
         console.log(roleInput);
@@ -13,9 +24,15 @@
           .then((response) => response.json()) // 응답을 JSON으로 변환
           .then((data) => {
             console.log(data);
+            // // 응답 데이터를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   JSON.stringify(data);
           })
           .catch((err) => {
             console.error(err);
+            // 에러 메시지를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   "Error: " + error;
           });
       }
       function issuing() {
@@ -25,27 +42,45 @@
           .then((response) => response.json()) // 응답을 JSON으로 변환
           .then((data) => {
             console.log(data);
-            //발급바은 token을 cookie에 저장
+            //발급바은 token을 cookie에 적재
             document.cookie = `token=${data.token};path=/`;
+            // // 응답 데이터를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   JSON.stringify(data);
           })
           .catch((err) => {
             console.error(err);
+            // 에러 메시지를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   "Error: " + error;
           });
       }
       function verification() {
         let roleInput = document.querySelector('input[name="role"]').value;
-        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=VERIFY_URL %>`)
+        let token = getCookie("token");
+        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=VERIFY_URL %>`, {
+          headers: { token: token },
+        })
           .then((response) => response.json()) // 응답을 JSON으로 변환
           .then((data) => {
             console.log(data);
+            // // 응답 데이터를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   JSON.stringify(data);
           })
           .catch((err) => {
             console.error(err);
+            // 에러 메시지를 페이지에 표시
+            // document.querySelector("#responseResult").textContent =
+            //   "Error: " + error;
           });
       }
       function refreshing() {
         let roleInput = document.querySelector('input[name="role"]').value;
-        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=REFRESH_URL %>`)
+        let token = getCookie("token");
+        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=REFRESH_URL %>`, {
+          headers: { token: token },
+        })
           .then((response) => response.json()) // 응답을 JSON으로 변환
           .then((data) => {
             console.log(data);
@@ -63,6 +98,7 @@
     </script>
   </head>
   <body>
+    <!--토근 방식 변경을 위한 기록용 복사본-->
     <h1>Restful API Server Test</h1>
     <p>hello <%=name %></p>
     <div>

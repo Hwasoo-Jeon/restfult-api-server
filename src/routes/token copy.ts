@@ -1,23 +1,9 @@
+// 토근 방식 변경을 위한 기록용 복사본
 import express, { NextFunction, Response, Request } from "express";
 import roleDataJson from "../role.json";
 import jwt from "jsonwebtoken";
-import { strict } from "assert";
-// import cookieParser from "cookie-parser";
-// import * as dotenv from "dotenv";
-//dotenv.config();
-
-// 일회성 변수가 전역적으로 남는 것을 방지하기 위해 익명함수로 스코프를 제한함
-// 예상대로 동작안함.
-// (() => {
-//   const result = dotenv.config({ path: path.join(__dirname, "..", ".env") }); // .env 파일의 경로를 dotenv.config에 넘겨주고 성공여부를 저장함
-//   if (result.parsed == undefined)
-//     // .env 파일 parsing 성공 여부 확인
-//     throw new Error("Cannot loaded environment variables file."); // parsing 실패 시 Throwing
-// })();
-
-// if (typeof process.env.PUBLIC_URL === "undefined") {
-//   throw new Error("PUBLIC_URL is not defined in the environment variables.");
-// }
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
 // roleData.json 파일의 구조에 맞춘 타입 정의
@@ -33,8 +19,26 @@ interface RoleData {
 interface resStructure {
   [key: string]: string;
 }
+/*
+interface Roles {
+  super: number;
+  admin: number;
+  member: number;
+}
 
-const roleData: RoleData = roleDataJson; // !!!!!!!!!수정하고, 바로 밑 함수 수정
+interface Authorization {
+  super: string[];
+  admin: string[];
+  member: string[];
+}
+
+interface RoleData {
+  role: Roles;
+  authorization: Authorization;
+}
+*/
+
+const roleData: RoleData = roleDataJson;
 // const roleData = roleDataJson as {
 //   role: {
 //     [key: string]: string; // 인덱스 서명 추가
@@ -59,7 +63,24 @@ function getPermissionsForRole(inputRole: string): string[] | undefined {
   }
 }
 
+// 일회성 변수가 전역적으로 남는 것을 방지하기 위해 익명함수로 스코프를 제한함
+// (() => {
+//   const result = dotenv.config({ path: path.join(__dirname, "..", ".env") }); // .env 파일의 경로를 dotenv.config에 넘겨주고 성공여부를 저장함
+//   if (result.parsed == undefined)
+//     // .env 파일 parsing 성공 여부 확인
+//     throw new Error("Cannot loaded environment variables file."); // parsing 실패 시 Throwing
+// })();
+
+// if (typeof process.env.PUBLIC_URL === "undefined") {
+//   throw new Error("PUBLIC_URL is not defined in the environment variables.");
+// }
+
+if (typeof process.env.SECRET_KEY === "undefined") {
+  throw new Error("SECRET_KEY is not defined in the environment variables.");
+}
+
 const secretKey = process.env.SECRET_KEY;
+
 //accessToken Issuing
 const generateAccessToken = (role: string) => {
   if (secretKey == undefined) {
@@ -94,7 +115,7 @@ router.get(
         throw new Error("secretKey is Unloaded");
       }
       const userRole = req.params.role as string;
-      const receivedToken = req.cookies.accessToken;
+      const receivedToken = req.headers["token"] as string;
       console.log(userRole + "  " + receivedToken);
       const newToken = refreshToken(userRole, receivedToken);
       res.status(200).json({
@@ -115,7 +136,7 @@ router.get(
       if (secretKey == undefined) {
         throw new Error("secretKey is Unloaded");
       }
-      const receivedToken = req.cookies.accessToken;
+      const receivedToken = req.headers["token"] as string;
       const decoding = jwt.verify(receivedToken, secretKey);
 
       res.status(200).json({
@@ -137,14 +158,9 @@ router.get(
         throw new Error("secretKey is Unloaded");
       }
       const userRole = req.params.role as string; //pathVariable.. params 대신 query 작성하면 쿼리변수
-      const accessToken = generateAccessToken(userRole);
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true, //script로 접근 불가, only http
-        secure: false, // http가능, true=> https에서 사용
-        sameSite: "strict", //같은도메인 외에는 쿠키 접근 불가
-      });
+      const receivedToken = generateAccessToken(userRole);
       res.status(200).json({
-        token: accessToken,
+        token: receivedToken,
       });
     } catch (error) {
       res.status(500).json({
