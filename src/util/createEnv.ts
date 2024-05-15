@@ -19,7 +19,7 @@ import fileSystem from "fs";
   });
   fileSystem.appendFileSync(
     ".env",
-    `PUBLIC_URL=http://localhost:3000\n`,
+    `PUBLIC_URL=http://localhost:3000\nREDIS_PASSWORD=root\nREDIS_PORT=6379\nREDIS_LISTENING_PORT=3005\nNODE_ENV=development\n`,
     "utf8"
   );
 })();

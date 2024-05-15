@@ -1,5 +1,5 @@
 import "./util/dotenvConfig"; //dotenv.config();
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser"; //cookie-parser 미들웨어를 불러옵니다. 이는 요청된 쿠키를 파싱하여 req.cookies로 접근하게 함.
 import logger from "morgan"; //morgan 미들웨어를 불러옵니다. HTTP 요청 로거로서, 요청에 대한 정보를 로그로 기록하는 데 사용
 // import { fileURLToPath } from "url";
@@ -7,8 +7,10 @@ import indexRouter from "./routes/index";
 import usersRouter from "./routes/users";
 import testRouter from "./routes/test";
 import tokenRouter from "./routes/token";
+import authRouter from "./routes/auth";
 import session from "express-session";
 import path from "path";
+import passport from "passport";
 
 const app = express();
 
@@ -38,7 +40,7 @@ app.use(express.static(path.join(__dirname, "public"))); //정적 파일을 제�
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "public/views")); // view 파일들이 모여있는 폴더 지정
 
-// session에 cookie를 담음
+// express-session 사용 코드 : session에 cookie를 담음
 // httpOnly: 클라이언트 측 스크립트가 쿠키에 접근하는 것을 방지합니다. XSS 공격으로부터 보호하는 데 도움이 됩니다.
 // sameSite: CSRF 공격 방지를 위해 쿠키가 같은 사이트 요청에만 보내지도록 합니다. 'strict', 'lax', 'none' 중 하나로 설정할 수 있습니다.
 // maxAge: 쿠키의 최대 수명을 설정합니다. 이는 쿠키가 언제 만료될지 결정합니다.
@@ -53,13 +55,35 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "strict",
-      maxAge: 60 * 60 * 1000,
+      maxAge: 60 * 1000, //밀리세컨드
     },
   })
 );
+
+app.use(passport.initialize()); // 사용자 인증 상태를 유지하기 위해 Passport가 초기화되고,
+app.use(passport.session()); // passport가 session 사용
+
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/test", testRouter);
 app.use("/token", tokenRouter);
+app.use("/user", authRouter);
 
+// 404 핸들링
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const error = new Error("Not Found") as any;
+  error.status = 404;
+  next(error); //응답을 전달하는 것이 아닌 다음 미들웨어(next) 진행
+});
+
+// 기타 에러 핸들링
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  res.status(err.status || 500);
+  res.json({
+    error: {
+      message: err.message,
+      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    },
+  });
+});
 export default app;

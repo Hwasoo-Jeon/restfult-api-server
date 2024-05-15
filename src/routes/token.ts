@@ -1,91 +1,14 @@
 import express, { NextFunction, Response, Request } from "express";
-import roleDataJson from "../role.json";
+import {
+  getPermissionsForRole,
+  generateAccessToken,
+  refreshToken,
+  secretKey,
+} from "../util/jwt-util";
 import jwt from "jsonwebtoken";
-import { strict } from "assert";
-// import cookieParser from "cookie-parser";
-// import * as dotenv from "dotenv";
-//dotenv.config();
-
-// 일회성 변수가 전역적으로 남는 것을 방지하기 위해 익명함수로 스코프를 제한함
-// 예상대로 동작안함.
-// (() => {
-//   const result = dotenv.config({ path: path.join(__dirname, "..", ".env") }); // .env 파일의 경로를 dotenv.config에 넘겨주고 성공여부를 저장함
-//   if (result.parsed == undefined)
-//     // .env 파일 parsing 성공 여부 확인
-//     throw new Error("Cannot loaded environment variables file."); // parsing 실패 시 Throwing
-// })();
-
-// if (typeof process.env.PUBLIC_URL === "undefined") {
-//   throw new Error("PUBLIC_URL is not defined in the environment variables.");
-// }
-
 const router = express.Router();
 // roleData.json 파일의 구조에 맞춘 타입 정의
-interface RoleData {
-  role: {
-    [key: string]: string;
-  };
-  authorization: {
-    [key: string]: string[];
-  };
-}
 
-interface resStructure {
-  [key: string]: string;
-}
-
-const roleData: RoleData = roleDataJson; // !!!!!!!!!수정하고, 바로 밑 함수 수정
-// const roleData = roleDataJson as {
-//   role: {
-//     [key: string]: string; // 인덱스 서명 추가
-//   };
-//   authorization: {
-//     [key: string]: string[];
-//   };
-// }; //위처럼 사용
-
-function getPermissionsForRole(inputRole: string): string[] | undefined {
-  // 입력받은 role이 유효한지 확인
-  if (inputRole in roleData.role) {
-    // role에 해당하는 인덱스를 찾아 권한 배열을 반환
-    const roleDescription = roleData.role[inputRole];
-    // 해당 역할에 대한 권한 추출
-    const permissions = roleData.authorization[inputRole];
-    // 역할 설명과 권한을 배열에 담아 반환
-    return [roleDescription, ...permissions];
-  } else {
-    // 유효하지 않은 role의 경우
-    return undefined;
-  }
-}
-
-const secretKey = process.env.SECRET_KEY;
-//accessToken Issuing
-const generateAccessToken = (role: string) => {
-  if (secretKey == undefined) {
-    throw new Error("secretKey is Unloaded");
-  }
-  console.log(secretKey);
-  const payload = { username: role };
-  const token = jwt.sign(payload, secretKey, { expiresIn: "1m" });
-
-  return token;
-};
-
-const refreshToken = (userRole: string, receivedToken: string) => {
-  try {
-    if (secretKey == undefined) {
-      throw new Error("secretKey is Unloaded");
-    }
-    const decoding = jwt.verify(receivedToken, secretKey);
-    console.log(decoding);
-    const payload = { username: userRole };
-    const newToken = jwt.sign(payload, secretKey, { expiresIn: "1m" });
-    return newToken;
-  } catch (error) {
-    throw new Error("Invalid Token Accepted. Verify your Token");
-  }
-};
 router.get(
   "/:role/refreshing",
   (req: Request, res: Response, next: NextFunction) => {
