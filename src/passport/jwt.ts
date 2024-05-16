@@ -14,11 +14,11 @@ Strategy는 Passport Middleware에서 사용하는 인증 전략
 */
 
 // Request의 cookie 추출
-function cookieExtractor(req: any) {
+const cookieExtractor = (req: any) => {
   let token = null;
   if (req && req.cookies) token = req.cookies.accessToken;
   return token;
-}
+};
 
 // Passport를 사용하여 JWT를 통한 인증 전략
 // 공식문서 참조

@@ -11,6 +11,8 @@ import authRouter from "./routes/auth";
 import session from "express-session";
 import path from "path";
 import passport from "passport";
+import passportAuth from "./passport/jwt";
+import secure from "./middlewares/secure";
 
 const app = express();
 
@@ -18,27 +20,27 @@ const app = express();
 logger.token("date", function (req: Request, res: Response) {
   return new Date().toLocaleString();
 });
-
 logger.token("access", function (req: Request, res: Response) {
   return req.ip;
 });
-
 logger.format(
   "myformat",
   "[ :date ] :access :method :url :status :response-time ms"
 );
+
+app.use(logger("myformat")); //HTTP 요청 로그를 개발자 친화적 형식으로 출력
+app.use(express.json()); //들어오는 요청 본문(body)을 JSON 형식으로 파싱
+app.use(express.urlencoded({ extended: true })); //URL 인코딩된 데이터를 파싱합니다. extended: false는 라이브러리 querystring을 사용함(ex form 태그)
+app.use(express.static(path.join(__dirname, "public"))); //정적 파일을 제공하기 위한 경로를 설정합니다. 여기서 __dirname은 현재 실행 중인 스크립트가 위치한 디렉토리의 절대 경로
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "public/views")); // view 파일들이 모여있는 폴더 지정
+
 // COOKIE 파싱 관련 시크릿 변수
 const cookieSecret = process.env.COOKIE_SECRET;
 (() => {
   if (cookieSecret === undefined) throw new Error("cookieSecret is undefined");
 })();
-app.use(logger("myformat")); //HTTP 요청 로그를 개발자 친화적 형식으로 출력
-app.use(express.json()); //들어오는 요청 본문(body)을 JSON 형식으로 파싱
-app.use(express.urlencoded({ extended: true })); //URL 인코딩된 데이터를 파싱합니다. extended: false는 라이브러리 querystring을 사용함(ex form 태그)
 app.use(cookieParser(cookieSecret)); //요청된 쿠키를 파싱
-app.use(express.static(path.join(__dirname, "public"))); //정적 파일을 제공하기 위한 경로를 설정합니다. 여기서 __dirname은 현재 실행 중인 스크립트가 위치한 디렉토리의 절대 경로
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "public/views")); // view 파일들이 모여있는 폴더 지정
 
 // express-session 사용 코드 : session에 cookie를 담음
 // httpOnly: 클라이언트 측 스크립트가 쿠키에 접근하는 것을 방지합니다. XSS 공격으로부터 보호하는 데 도움이 됩니다.
@@ -55,35 +57,52 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "strict",
-      maxAge: 60 * 1000, //밀리세컨드
+      maxAge: 600 * 1000, //밀리세컨드
     },
   })
 );
 
+/*
 app.use(passport.initialize()); // 사용자 인증 상태를 유지하기 위해 Passport가 초기화되고,
 app.use(passport.session()); // passport가 session 사용
-
+passportAuth(passport); // 모든 jwt 인증을 passport가 수행
+*/
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/test", testRouter);
 app.use("/token", tokenRouter);
-app.use("/user", authRouter);
+app.use("/auth", authRouter);
 
+// csrf token사용과 이것을 쿠키로 사용한다는 설정
+app.use(secure.csrfProtection);
+
+// csrf Error 핸들링
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  if (err.message === "EBADCSRFTOKEN") {
+    // CSRF 토큰 검증 실패 시 처리
+    res.status(403).send("CSRF token validation failed");
+  } else {
+    // 다른 오류는 다음 미들웨어로 전달
+    next(err);
+  }
+});
 // 404 핸들링
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const error = new Error("Not Found") as any;
-  error.status = 404;
-  next(error); //응답을 전달하는 것이 아닌 다음 미들웨어(next) 진행
+  const error = new Error("Page is not found");
+  (error as any).status = 404;
+  next(error); //error를 다음 미들웨어(next)로 전달
 });
 
-// 기타 에러 핸들링
+// Error 핸들링
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(err.status || 500);
   res.json({
     error: {
       message: err.message,
-      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+      stack: process.env.NODE_ENV === "development" ? err.stack : {}, //개발자환경에서는 err.stack 노출
     },
+    status: err.status,
   });
 });
+
 export default app;

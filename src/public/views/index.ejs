@@ -60,12 +60,98 @@
         alert("토큰 삭제 완료!");
         window.location.reload();
       };
+
+      const login = () => {
+        const username = document.querySelector(
+          "#login_form input[name='username']"
+        ).value;
+        const password = document.querySelector(
+          "#login_form input[name='password']"
+        ).value;
+        const csrfToken = document.querySelector(
+          "#login_form input[name='csrf_token']"
+        ).value;
+        console.log(csrfToken);
+        fetch(`<%=PUBLIC_URL+'/'+LOGIN_URL %>`, {
+          method: "post",
+          //csurf는 기본적으로 요청 헤더, 바디, 쿼리에서 CSRF 토큰을 찾으려고 시도
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+          credentials: "include",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((err) => console.log(err));
+      };
+
+      const signup = () => {
+        const username = document.querySelector(
+          "#signup_form input[name='username']"
+        ).value;
+        const password = document.querySelector(
+          "#signup_form input[name='password']"
+        ).value;
+        const csrfToken = document.querySelector(
+          "#signup_form input[name='csrf_token']"
+        ).value;
+        console.log(csrfToken);
+        fetch(`<%=PUBLIC_URL+'/'+SIGNUP_URL %>`, {
+          method: "post",
+          //csurf는 기본적으로 요청 헤더, 바디, 쿼리에서 CSRF 토큰을 찾으려고 시도
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+          credentials: "include",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((err) => console.log(err));
+      };
     </script>
   </head>
   <body>
     <h1>Restful API Server Test</h1>
     <p>hello <%=name %></p>
     <div>
+      <h3>Login</h3>
+      <form id="login_form" method="post" action="">
+        <label for="username"
+          >id : <input type="text" id="username" name="username"
+        /></label>
+        <br />
+        <label for="password"
+          >password : <input type="password" id="password" name="password"
+        /></label>
+        <input type="hidden" name="csrf_token" value="<%=csrfToken %>" />
+        <input type="button" onclick="login()" value="login" />
+      </form>
+      <h3>signup</h3>
+      <form id="signup_form" method="post" action="">
+        <label for="username"
+          >id : <input type="text" id="username" name="username"
+        /></label>
+        <br />
+        <label for="password"
+          >password : <input type="password" id="password" name="password"
+        /></label>
+        <input type="hidden" name="csrf_token" value="<%=csrfToken %>" />
+        <input type="button" onclick="signup()" value="signup" />
+      </form>
       <h3>access token issue</h3>
       역할 :
       <input type="text" name="role" value="member" /><br />

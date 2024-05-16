@@ -24,16 +24,18 @@ const secure = {
     cookie: { httpOnly: true, sameSite: "strict" },
   }),
 
+  // accessToken 유효성 검증, (false : refreshToken 검증)
+  // 검증후 passport-jwt로 넘기기에 accessToken 설정해야함
   csrfTokenVerify: async (req: Request, res: Response, next: NextFunction) => {
     let token;
     if (
-      req.cookies.hasOwnProperty("accessToken") ||
-      req.cookies.hasOwnProperty("refreshToken")
+      !req.cookies.hasOwnProperty("accessToken") ||
+      !req.cookies.hasOwnProperty("refreshToken")
     ) {
       return res.status(200).json({
         status: 403,
         success: false,
-        message: "Authentication token is invalid",
+        message: "Authentication token is invalid. Login or Retry",
       });
     }
 
@@ -48,16 +50,17 @@ const secure = {
       res.clearCookie("accessToken");
 
       try {
-        //  refreshToken으로 권한 검증 및 payload에서 userid 추출
+        // refreshToken으로 권한 검증 및 payload에서 userid 추출
         token = req.cookies.refreshToken;
         const decode = jwt.verify(token, secure.checkSecretKey());
 
+        // verify 반환 타입 확인해야함
         if (typeof decode !== "string" && "userid" in decode) {
           const { userid } = decode;
-          // userid를 가지고, redis의 refreshToken 확인
+          // userid를 가지고, redis의 refreshToken 유효성 체크
           const redis_refreshToken = await secure.redisClient.get(userid);
           if (!redis_refreshToken || redis_refreshToken != token) {
-            throw new Error("Invalid Token");
+            throw new Error("Invalid Token"); // res.json으로 대체 가능한지 확인
           }
 
           //accessToken 재발행
@@ -65,7 +68,7 @@ const secure = {
           res.cookie("accessToken", accessToken, {
             httpOnly: true,
             sameSite: "strict",
-            maxAge: 60 * 1000, //밀리세컨드
+            maxAge: 60 * 1000, //밀리세컨드 (60*1초)
           });
 
           req.cookies.accessToken = accessToken;
