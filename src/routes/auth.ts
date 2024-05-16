@@ -1,4 +1,3 @@
-import { createClient, RedisClientType } from "redis";
 import Joi from "joi";
 import bcrypt from "bcrypt";
 import secure from "../middlewares/secure";
@@ -6,31 +5,17 @@ import { user } from "../model/user";
 import jwt from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
-const redisClient: RedisClientType = createClient({
-  socket: {
-    port: Number(process.env.REDIS_PORT),
-    host: "localhost",
-  },
-});
-//Connect Console
-redisClient.on("connect", () => {
-  console.info("Redis connected!");
-});
-//Error Console
-redisClient.on("error", (err) => {
-  console.error("Redis Client Error", err);
-});
-// redis v4 연결 (비동기)
-redisClient.connect().then();
 
 // mongodb 연결
-mongoose
-  .connect(
-    "mongodb://localhost:27017/users"
-    // { useNewUrlParser: true, useUnifiedTopology: true } //에러 발생
-  )
-  .then(() => console.log("Successfully connected to mongodb"))
-  .catch((e) => console.error(e));
+const mongoDBConnect = async () => {
+  await mongoose
+    .connect(
+      "mongodb://localhost:27017/users?directConnection=true"
+      // { useNewUrlParser: true, useUnifiedTopology: true } //에러 발생
+    )
+    .then(() => console.log("Successfully connected to mongodb"))
+    .catch((e) => console.error(e));
+};
 // cookie 설정
 const cookieOptions = {
   httpOnly: true,
@@ -55,20 +40,20 @@ const secretKey = process.env.SECRET_KEY;
   }
 })();
 
-//csrf 토큰 발급
 const router = express.Router();
-router.get(
-  "/csrf",
-  secure.csrfProtection, // CSRF 보호 미들웨어 먼저 적용
-  (req: Request, res: Response, next: NextFunction) => {
-    //쿠키 이름, 값, 쿠키 설정
-    res.cookie("csrfToken", req.csrfToken(), cookieOptions);
+//csrf 토큰 발급 (현재 불필요하여 주석)
+// router.get(
+//   "/csrf",
+//   secure.csrfProtection, // CSRF 보호 미들웨어 먼저 적용
+//   (req: Request, res: Response, next: NextFunction) => {
+//     //쿠키 이름, 값, 쿠키 설정
+//     res.cookie("csrfToken", req.csrfToken(), cookieOptions);
 
-    res
-      .status(200)
-      .json({ status: 200, success: true, message: "Csrf Token Issued" });
-  }
-);
+//     res
+//       .status(200)
+//       .json({ status: 200, success: true, message: "Csrf Token Issued" });
+//   }
+// );
 
 //회원가입
 router.post(
@@ -84,7 +69,9 @@ router.post(
       console.log("validateAsync 후");
       // mongoose의 model을 통한 mongodb의 컬렉션 조회
       console.log("record 전");
+      mongoDBConnect();
       const record = await user.findOne({ username: body.username });
+      mongoose.disconnect();
       console.log("record 후");
       // (동일 정보로 입력한 사람이 있다면)
       if (record) {
@@ -131,11 +118,12 @@ router.post(
     console.log(body);
     try {
       // 입력데이터의 스키마를 통한 검증
-      console.log("try");
       await schema.validateAsync(body);
-      console.log("try 종료");
+
       // (로그인 입력에 문제가 없다면)
+      mongoDBConnect();
       const record = await user.findOne({ username: body.username });
+      mongoose.disconnect();
       if (record === null) {
         return res.status(200).json({
           status: 403,
@@ -164,12 +152,17 @@ router.post(
       res.cookie("accessToken", accessToken, cookieOptions);
       res.cookie("refreshToken", refreshToken, cookieOptions);
 
+      //redis에 userId, refrestoken 입력
+      await secure.redisClient.connect();
+      await secure.redisClient.set(payload.userId, refreshToken);
+      await secure.redisClient.disconnect();
       return res.status(200).json({
         status: 200,
         success: true,
         message: "Log-in Success",
       });
     } catch (error) {
+      console.log(error);
       res.status(200).json({
         status: 403,
         success: false,

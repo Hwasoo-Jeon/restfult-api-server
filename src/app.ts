@@ -8,6 +8,7 @@ import usersRouter from "./routes/users";
 import testRouter from "./routes/test";
 import tokenRouter from "./routes/token";
 import authRouter from "./routes/auth";
+import apiRouter from "./routes/api";
 import session from "express-session";
 import path from "path";
 import passport from "passport";
@@ -72,6 +73,7 @@ app.use("/users", usersRouter);
 app.use("/test", testRouter);
 app.use("/token", tokenRouter);
 app.use("/auth", authRouter);
+app.use("/api", apiRouter);
 
 // csrf token사용과 이것을 쿠키로 사용한다는 설정
 app.use(secure.csrfProtection);

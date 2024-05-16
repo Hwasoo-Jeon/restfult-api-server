@@ -122,6 +122,19 @@
           })
           .catch((err) => console.log(err));
       };
+
+      const api = () => {
+        fetch("http://localhost:3000/api")
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+            document.querySelector("#responseResult").innerHTML =
+              JSON.stringify(data, null, 2);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      };
     </script>
   </head>
   <body>
@@ -152,44 +165,14 @@
         <input type="hidden" name="csrf_token" value="<%=csrfToken %>" />
         <input type="button" onclick="signup()" value="signup" />
       </form>
-      <h3>access token issue</h3>
-      역할 :
-      <input type="text" name="role" value="member" /><br />
-      <input
-        id="submitBtn"
-        type="button"
-        value="권한 체크"
-        onclick="check()"
-      /><br />
-      <input
-        id="submitBtn"
-        type="button"
-        value="토큰 발급"
-        onclick="issuing()"
-      /><br />
-      <input
-        id="submitBtn"
-        type="button"
-        value="토큰 검증"
-        onclick="verification()"
-      /><br />
-      <input
-        id="submitBtn"
-        type="button"
-        value="토큰 갱신"
-        onclick="refreshing()"
-      /><br />
-      <input
-        id="submitBtn"
-        type="button"
-        value="토큰 삭제"
-        onclick="removingToken()"
-      /><br />
-    </div>
-
-    <div>
-      <h3>응답 확인</h3>
-      <div id="responseResult"></div>
+      <h3>JWT Verify</h3>
+      <form id="signup_form" method="get" action="">
+        <input type="button" onclick="api()" value="verify" />
+      </form>
+      <div>
+        <h3>응답 확인</h3>
+        <div id="responseResult"></div>
+      </div>
     </div>
   </body>
 </html>

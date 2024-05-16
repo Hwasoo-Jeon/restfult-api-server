@@ -26,10 +26,10 @@ const secure = {
 
   // accessToken 유효성 검증, (false : refreshToken 검증)
   // 검증후 passport-jwt로 넘기기에 accessToken 설정해야함
-  csrfTokenVerify: async (req: Request, res: Response, next: NextFunction) => {
+  jwtTokenVerify: async (req: Request, res: Response, next: NextFunction) => {
     let token;
     if (
-      !req.cookies.hasOwnProperty("accessToken") ||
+      !req.cookies.hasOwnProperty("accessToken") &&
       !req.cookies.hasOwnProperty("refreshToken")
     ) {
       return res.status(200).json({
@@ -45,6 +45,7 @@ const secure = {
       await jwt.verify(token, secure.checkSecretKey());
       next();
     } catch (error) {
+      console.log(error);
       // (accessToken 실패 분기)
       // accessToken을 cookie에서 삭제
       res.clearCookie("accessToken");
@@ -55,11 +56,15 @@ const secure = {
         const decode = jwt.verify(token, secure.checkSecretKey());
 
         // verify 반환 타입 확인해야함
-        if (typeof decode !== "string" && "userid" in decode) {
-          const { userid } = decode;
+        if (typeof decode !== "string" && "userId" in decode) {
+          const { userId } = decode;
           // userid를 가지고, redis의 refreshToken 유효성 체크
-          const redis_refreshToken = await secure.redisClient.get(userid);
-          if (!redis_refreshToken || redis_refreshToken != token) {
+          await secure.redisClient.connect();
+          const redis_refreshToken = await secure.redisClient.get(userId);
+          console.log(decode);
+          await secure.redisClient.disconnect(); // 사용 후 연결 해제
+
+          if (!redis_refreshToken) {
             throw new Error("Invalid Token"); // res.json으로 대체 가능한지 확인
           }
 
@@ -82,6 +87,7 @@ const secure = {
           });
         }
       } catch (error) {
+        console.log(error);
         // (refreshToken 실패 분기)
         res.status(403).json({
           status: 403,
