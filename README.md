@@ -5,29 +5,30 @@
 - NodeJS+Express 환경에서의 Restful API 서버 구현
 - Typescript 설정 및 활용
 - JWT 설정 및 활용
+- JWT 효과적인 사용을 위한 Redis, MongoDB 활용
 <br/>
 
 ## 환경 및 사용 라이브러리
 - Language : TypeScript
-- BackEnd : NodeJS + Express Generator, JWT
+- BackEnd : NodeJS + Express Generator
 - FrontEnd : ejs(view)
 - DB : Redis, MongoDB
-- Library : csurf(csrf), mongoose(mongodb 영속성 생성), passport(jwt 인증), joi(클라이언트의 입력값 검증) 등
+- Library : JWT, csurf(csrf), mongoose(mongodb 영속성 생성), passport(jwt 인증), joi(클라이언트의 전달 데이터 검증) 등
 <br/>
 
-## 흐름
+## 기능 및 흐름
+- 모든 과정의 csrf 체크
 - 회원 가입 정보 : mongodb 저장
-- 로그인 결과 : accessToken, refreshToken의 csrf를 통한 cookie 저장, refreshToken의 redis 저장
+- 로그인 결과 : JWT로 생성된 accessToken, refreshToken의 cookie 저장, mongoDB의 _id와 refreshToken의 redis 저장
+- API 활용 가능 검증 : 클라이언트의 Cookie 내부의 활성화된 Token 체크, AccessToken 사용 불가 시 Redis의 RefreshToken 체크 및 AccessToken 재발급
 - API 요청에 따른 JWT 인증 검증 : Passport.js
-<br/>
-
-## 기능
 - Accesstoken, RefreshToken 발급 및 저장(Cookie), 검증, 갱신, 삭제
-- token 검증(Passport JS)
+- JWT 검증(Passport JS)
 <br/>
 
 ## 진행중
-- 기능 검토
+- PassPort JS 코드 수정
+- 쿠키 삭제 및 갱신 코드 수정
 - 사용자별 권한 제한
 <br/>
 
