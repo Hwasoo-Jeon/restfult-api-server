@@ -7,27 +7,27 @@
 - JWT 설정 및 활용
 <br/>
 
-## 환경
-- BackEnd : NodeJS + Express Generator, JWT, Typescript
-- FrontEnd : ejs(간단한 요청용 view)
-- DB : Redis
+## 환경 및 사용 라이브러리
+- Language : TypeScript
+- BackEnd : NodeJS + Express Generator, JWT
+- FrontEnd : ejs(view)
+- DB : Redis, MongoDB
+- Library : csurf(csrf), mongoose(mongodb 영속성 생성), passport(jwt 인증), joi(클라이언트의 입력값 검증) 등
 <br/>
 
 ## 흐름
-- 로그인 정보를 검증 : Passport.js
-- 사용자 인증 정보를 전송 수단 : JWT
-- 세션 정보를 저장 : Redis
+- 회원 가입 정보 : mongodb 저장
+- 로그인 결과 : accessToken, refreshToken의 csrf를 통한 cookie 저장, refreshToken의 redis 저장
+- API 요청에 따른 JWT 인증 검증 : Passport.js
 <br/>
 
 ## 기능
 - Accesstoken, RefreshToken 발급 및 저장(Cookie), 검증, 갱신, 삭제
-- 로그인 기능(Passport JS)
+- token 검증(Passport JS)
 <br/>
 
 ## 진행중
-- cookie-parser로 쿠키 설정
-- passport를 사용한 login 및 token 처리
-- Redis를 통한 refreshToken 저장
+- 기능 검토
 - 사용자별 권한 제한
 <br/>
 
