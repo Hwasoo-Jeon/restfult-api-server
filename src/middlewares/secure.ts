@@ -21,17 +21,14 @@ const secure = {
   // csurf: CSRF 공격 방지용 middleware
   // token이 저장된 cookie를 csrf용 token으로 사용
   csrfProtection: csurf({
-    cookie: { httpOnly: true, sameSite: "strict" },
+    cookie: { httpOnly: true, sameSite: "strict", maxAge: 10 },
   }),
 
   // accessToken 유효성 검증, (false : refreshToken 검증)
   // 검증후 passport-jwt로 넘기기에 accessToken 설정해야함
   jwtTokenVerify: async (req: Request, res: Response, next: NextFunction) => {
     let token;
-    if (
-      !req.cookies.hasOwnProperty("accessToken") &&
-      !req.cookies.hasOwnProperty("refreshToken")
-    ) {
+    if (!req.cookies.accessToken && !req.cookies.refreshToken) {
       return res.status(200).json({
         status: 403,
         success: false,

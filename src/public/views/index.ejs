@@ -6,61 +6,6 @@
     <title>Restful API Main Page</title>
     <link rel="stylesheet" href="/stylesheets/style.css" />
     <script>
-      function check() {
-        let roleInput = document.querySelector('input[name="role"]').value;
-        console.log(roleInput);
-        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=CHECK_URL %>`)
-          .then((response) => response.json()) // 응답을 JSON으로 변환
-          .then((data) => {
-            console.log(data);
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      function issuing() {
-        let roleInput = document.querySelector('input[name="role"]').value;
-        console.log(roleInput);
-        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=ISSUE_URL %>`)
-          .then((response) => response.json()) // 응답을 JSON으로 변환
-          .then((data) => {
-            console.log(data);
-            //발급바은 token을 cookie에 저장
-            document.cookie = `token=${data.token};path=/`;
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      function verification() {
-        let roleInput = document.querySelector('input[name="role"]').value;
-        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=VERIFY_URL %>`)
-          .then((response) => response.json()) // 응답을 JSON으로 변환
-          .then((data) => {
-            console.log(data);
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      function refreshing() {
-        let roleInput = document.querySelector('input[name="role"]').value;
-        fetch(`<%=TOKEN_URL %>/${roleInput}/<%=REFRESH_URL %>`)
-          .then((response) => response.json()) // 응답을 JSON으로 변환
-          .then((data) => {
-            console.log(data);
-            document.cookie = `token=${data.token};path=/`;
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      const removingToken = () => {
-        document.cookie = `token=;max-age=-1;`;
-        alert("토큰 삭제 완료!");
-        window.location.reload();
-      };
-
       const login = () => {
         const username = document.querySelector(
           "#login_form input[name='username']"
@@ -77,7 +22,7 @@
           //csurf는 기본적으로 요청 헤더, 바디, 쿼리에서 CSRF 토큰을 찾으려고 시도
           headers: {
             "Content-Type": "application/json",
-            "X-CSRF-Token": csrfToken,
+            "X-XSRF-TOKEN": csrfToken,
           },
           body: JSON.stringify({
             username: username,
@@ -108,7 +53,7 @@
           //csurf는 기본적으로 요청 헤더, 바디, 쿼리에서 CSRF 토큰을 찾으려고 시도
           headers: {
             "Content-Type": "application/json",
-            "X-CSRF-Token": csrfToken,
+            "X-XSRF-TOKEN": csrfToken,
           },
           body: JSON.stringify({
             username: username,
@@ -124,7 +69,17 @@
       };
 
       const api = () => {
-        fetch("http://localhost:3000/api")
+        const csrfToken = document.querySelector(
+          "#verify_form input[name='csrf_token']"
+        ).value;
+
+        fetch("http://localhost:3000/api", {
+          method: "post",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-TOKEN": csrfToken,
+          },
+        })
           .then((res) => res.json())
           .then((data) => {
             console.log(data);
@@ -134,6 +89,12 @@
           .catch((err) => {
             console.log(err);
           });
+      };
+
+      const removingToken = () => {
+        document.cookie = `token=;max-age=-1;`;
+        alert("토큰 삭제 완료!");
+        window.location.reload();
       };
     </script>
   </head>
@@ -166,7 +127,8 @@
         <input type="button" onclick="signup()" value="signup" />
       </form>
       <h3>JWT Verify</h3>
-      <form id="signup_form" method="get" action="">
+      <form id="verify_form" method="get" action="">
+        <input type="hidden" name="csrf_token" value="<%=csrfToken %>" />
         <input type="button" onclick="api()" value="verify" />
       </form>
       <div>

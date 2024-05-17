@@ -22,8 +22,9 @@ import secure from "../middlewares/secure";
 
 const router = express.Router();
 
-router.get(
+router.post(
   "/",
+  secure.csrfProtection,
   secure.jwtTokenVerify,
   (req: Request, res: Response, next: NextFunction) => {
     console.log("jwtTokenVerify success");

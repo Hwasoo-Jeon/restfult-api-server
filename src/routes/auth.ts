@@ -17,9 +17,18 @@ const mongoDBConnect = async () => {
     .catch((e) => console.error(e));
 };
 // cookie 설정
-const cookieOptions = {
+const accessTokenCookieOptions = {
   httpOnly: true,
   secure: false,
+  SameSite: "strict",
+  maxAge: 60 * 1000,
+};
+
+const refreshTokenCookieOptions = {
+  httpOnly: true,
+  secure: false,
+  SameSite: "strict",
+  maxAge: 120 * 1000,
 };
 
 const schema = Joi.object().keys({
@@ -64,15 +73,13 @@ router.post(
     console.log(body);
     try {
       // 입력데이터의 스키마를 통한 검증
-      console.log("validateAsync 전");
       await schema.validateAsync(body);
-      console.log("validateAsync 후");
+
       // mongoose의 model을 통한 mongodb의 컬렉션 조회
-      console.log("record 전");
       mongoDBConnect();
       const record = await user.findOne({ username: body.username });
       mongoose.disconnect();
-      console.log("record 후");
+
       // (동일 정보로 입력한 사람이 있다면)
       if (record) {
         return res.status(200).json({
@@ -89,10 +96,9 @@ router.post(
         username: body.username,
         password: hashedPwd,
       };
-      console.log("create 전");
-      const mgresult = await user.create(payload);
-      console.log(mgresult);
-      console.log("create 후");
+
+      const userCreateResult = await user.create(payload);
+      console.log("create result>>> " + userCreateResult);
       return res.status(200).json({
         status: 200,
         success: true,
@@ -103,7 +109,7 @@ router.post(
       res.status(200).json({
         status: 403,
         success: false,
-        message: "Check input",
+        message: "Check input or Retry",
       });
     }
   }
@@ -115,7 +121,6 @@ router.post(
   secure.csrfProtection,
   async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
-    console.log(body);
     try {
       // 입력데이터의 스키마를 통한 검증
       await schema.validateAsync(body);
@@ -143,18 +148,20 @@ router.post(
 
       const payload = {
         userId: record._id.toString(), // _id 는 mongodb의 각 문서를 구분하는 유일한 식별자, 만일 보안에 탈취되어도  사용자의 개인정보를 알수는 없다.
-        username: record.username,
       };
 
       const accessToken = jwt.sign(payload, secretKey);
       const refreshToken = jwt.sign(payload, secretKey);
 
-      res.cookie("accessToken", accessToken, cookieOptions);
-      res.cookie("refreshToken", refreshToken, cookieOptions);
+      res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+      res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
       //redis에 userId, refrestoken 입력
       await secure.redisClient.connect();
-      await secure.redisClient.set(payload.userId, refreshToken);
+      await secure.redisClient.set(payload.userId, refreshToken, {
+        NX: true,
+        EX: 30,
+      });
       await secure.redisClient.disconnect();
       return res.status(200).json({
         status: 200,

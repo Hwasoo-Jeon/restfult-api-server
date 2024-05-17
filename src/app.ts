@@ -58,7 +58,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "strict",
-      maxAge: 600 * 1000, //밀리세컨드
+      maxAge: 60 * 1000, //밀리세컨드
     },
   })
 );
@@ -75,8 +75,9 @@ app.use("/token", tokenRouter);
 app.use("/auth", authRouter);
 app.use("/api", apiRouter);
 
-// csrf token사용과 이것을 쿠키로 사용한다는 설정
-app.use(secure.csrfProtection);
+// csrf token사용과 이것을 쿠키로 사용한다는 설정(모든 라우터에 csrf 활성화)
+// 전역 동작 안함
+//app.use(secure.csrfProtection);
 
 // csrf Error 핸들링
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
