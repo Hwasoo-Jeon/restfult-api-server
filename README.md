@@ -35,6 +35,8 @@
 - AccessToken의 보관 위치? Cookie or ModernStorage => https://velog.io/@0307kwon/JWT%EB%8A%94-%EC%96%B4%EB%94%94%EC%97%90-%EC%A0%80%EC%9E%A5%ED%95%B4%EC%95%BC%ED%95%A0%EA%B9%8C-localStorage-vs-cookie
 <br/>
 
+## 운영환경에서의 주의점
+- Secure & HttpOnly Flags: JWT Token을 쿠키에 저장할 때, Secure 플래그를 설정하여 HTTPS를 통해서만 쿠키가 전송되도록 하고, HttpOnly 플래그를 설정하여 JavaScript를 통한 쿠키의 접근을 차단. (XSS 보호 목적)
 ## 학습사항
 - expressGenerator를 이용하여 router 환경 구성
 - TypeScript를 설정 및 활용
