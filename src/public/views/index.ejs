@@ -91,10 +91,19 @@
           });
       };
 
-      const removingToken = () => {
-        document.cookie = `token=;max-age=-1;`;
-        alert("토큰 삭제 완료!");
-        window.location.reload();
+      const logout = () => {
+        fetch("http://localhost:3000/auth/logout", {
+          method: "post",
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+            document.querySelector("#responseResult").innerHTML =
+              JSON.stringify(data, null, 2);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       };
     </script>
   </head>
@@ -131,6 +140,9 @@
         <input type="hidden" name="csrf_token" value="<%=csrfToken %>" />
         <input type="button" onclick="api()" value="verify" />
       </form>
+      <h3>Logout And Token Invalidation</h3>
+      <input type="hidden" name="csrf_token" value="<%=csrfToken %>" />
+      <input type="button" onclick="logout()" value="logout" />
       <div>
         <h3>응답 확인</h3>
         <div id="responseResult"></div>

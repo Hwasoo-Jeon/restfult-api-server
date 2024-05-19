@@ -14,6 +14,7 @@ import path from "path";
 import passport from "passport";
 import passportAuth from "./passport/jwt";
 import secure from "./middlewares/secure";
+import mongoose from "mongoose";
 
 const app = express();
 
@@ -78,6 +79,18 @@ app.use("/api", apiRouter);
 // csrf token사용과 이것을 쿠키로 사용한다는 설정(모든 라우터에 csrf 활성화)
 // 전역 동작 안함
 //app.use(secure.csrfProtection);
+
+// db 연결 및 해제
+// mongodb 연결
+(async () => {
+  await mongoose
+    .connect(
+      "mongodb://localhost:27017/users?directConnection=true"
+      // { useNewUrlParser: true, useUnifiedTopology: true } //에러 발생
+    )
+    .then(() => console.log("Successfully connected to mongodb"))
+    .catch((e) => console.error(e));
+})();
 
 // csrf Error 핸들링
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

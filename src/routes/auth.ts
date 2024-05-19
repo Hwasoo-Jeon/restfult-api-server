@@ -4,31 +4,23 @@ import secure from "../middlewares/secure";
 import { user } from "../model/user";
 import jwt from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
+import redisClient from "../util/redisClient";
 
-// mongodb 연결
-const mongoDBConnect = async () => {
-  await mongoose
-    .connect(
-      "mongodb://localhost:27017/users?directConnection=true"
-      // { useNewUrlParser: true, useUnifiedTopology: true } //에러 발생
-    )
-    .then(() => console.log("Successfully connected to mongodb"))
-    .catch((e) => console.error(e));
-};
+import crypto from "crypto";
+
 // cookie 설정
 const accessTokenCookieOptions = {
   httpOnly: true,
   secure: false,
   SameSite: "strict",
-  maxAge: 60 * 1000,
+  maxAge: 5 * 1000,
 };
 
 const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: false,
   SameSite: "strict",
-  maxAge: 120 * 1000,
+  maxAge: 60 * 1000,
 };
 
 const schema = Joi.object().keys({
@@ -76,9 +68,7 @@ router.post(
       await schema.validateAsync(body);
 
       // mongoose의 model을 통한 mongodb의 컬렉션 조회
-      mongoDBConnect();
       const record = await user.findOne({ username: body.username });
-      mongoose.disconnect();
 
       // (동일 정보로 입력한 사람이 있다면)
       if (record) {
@@ -126,9 +116,7 @@ router.post(
       await schema.validateAsync(body);
 
       // (로그인 입력에 문제가 없다면)
-      mongoDBConnect();
       const record = await user.findOne({ username: body.username });
-      mongoose.disconnect();
       if (record === null) {
         return res.status(200).json({
           status: 403,
@@ -150,19 +138,23 @@ router.post(
         userId: record._id.toString(), // _id 는 mongodb의 각 문서를 구분하는 유일한 식별자, 만일 보안에 탈취되어도  사용자의 개인정보를 알수는 없다.
       };
 
+      const refreshTokenPayload = {
+        userId: record._id.toString(), // _id 는 mongodb의 각 문서를 구분하는 유일한 식별자, 만일 보안에 탈취되어도  사용자의 개인정보를 알수는 없다.
+      };
       const accessToken = jwt.sign(payload, secretKey);
-      const refreshToken = jwt.sign(payload, secretKey);
-
+      const refreshToken = jwt.sign(refreshTokenPayload, secretKey);
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update("MyRefreshTokenHashing")
+        .digest("hex");
       res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-      res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+      res.cookie("hashedToken", hashedToken, refreshTokenCookieOptions);
 
       //redis에 userId, refrestoken 입력
-      await secure.redisClient.connect();
-      await secure.redisClient.set(payload.userId, refreshToken, {
+      await redisClient.set(hashedToken, refreshToken, {
         NX: true,
-        EX: 30,
+        EX: 60,
       });
-      await secure.redisClient.disconnect();
       return res.status(200).json({
         status: 200,
         success: true,
@@ -178,6 +170,32 @@ router.post(
     }
   }
 );
-// router 설정
+// logout
+router.post(
+  "/logout",
+  async (req: Request, res: Response, next: NextFunction) => {
+    // token 추출
+    const hashedtoken = req.cookies.hashedToken;
+
+    // 클라이언트 쿠키삭제
+    res.clearCookie("hashedToken");
+    res.clearCookie("accessToken");
+    try {
+      // redis Token 삭제
+      const deleteResult = await redisClient.del(hashedtoken);
+      console.log(deleteResult);
+      return res
+        .status(200)
+        .json({ status: 200, success: true, message: "Logout succesfully" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: 500,
+        success: false,
+        message: "Error during logout",
+      });
+    }
+  }
+);
 
 export default router;
